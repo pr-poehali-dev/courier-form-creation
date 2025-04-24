@@ -17,6 +17,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import CitySelect from "./city-select";
+import { Bike, Car, CheckCircle, HelpCircle, Loader2, User, UserPlus } from "lucide-react";
 
 const formSchema = z.object({
   fullName: z.string().min(5, {
@@ -74,18 +75,33 @@ const CourierForm = () => {
     setIsSubmitting(false);
   };
 
+  const getTransportIcon = (type: string) => {
+    switch (type) {
+      case 'foot':
+        return <User className="h-5 w-5" />;
+      case 'bicycle':
+        return <Bike className="h-5 w-5" />;
+      case 'car':
+        return <Car className="h-5 w-5" />;
+      case 'scooter':
+        return <Bike className="h-5 w-5" rotate={20} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="fullName"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="animate-fade-in" style={{animationDelay: '100ms'}}>
                 <FormLabel>ФИО</FormLabel>
                 <FormControl>
-                  <Input placeholder="Иванов Иван Иванович" {...field} />
+                  <Input placeholder="Иванов Иван Иванович" {...field} className="rounded-md elevation-1" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -96,10 +112,10 @@ const CourierForm = () => {
             control={form.control}
             name="phone"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="animate-fade-in" style={{animationDelay: '200ms'}}>
                 <FormLabel>Телефон</FormLabel>
                 <FormControl>
-                  <Input placeholder="+7 (900) 123-45-67" {...field} />
+                  <Input placeholder="+7 (900) 123-45-67" {...field} className="rounded-md elevation-1" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -107,15 +123,15 @@ const CourierForm = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="animate-fade-in" style={{animationDelay: '300ms'}}>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="example@mail.ru" {...field} />
+                  <Input placeholder="example@mail.ru" {...field} className="rounded-md elevation-1" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -126,7 +142,7 @@ const CourierForm = () => {
             control={form.control}
             name="city"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="animate-fade-in" style={{animationDelay: '400ms'}}>
                 <FormLabel>Город</FormLabel>
                 <CitySelect value={field.value} onChange={field.onChange} />
                 <FormMessage />
@@ -139,46 +155,37 @@ const CourierForm = () => {
           control={form.control}
           name="transportType"
           render={({ field }) => (
-            <FormItem className="space-y-3">
+            <FormItem className="space-y-3 animate-fade-in" style={{animationDelay: '500ms'}}>
               <FormLabel>Тип транспорта</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex flex-col space-y-1"
+                  className="grid grid-cols-1 md:grid-cols-4 gap-3"
                 >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="foot" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Пеший курьер
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="bicycle" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Велокурьер
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="scooter" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Самокат
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="car" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Автомобиль
-                    </FormLabel>
-                  </FormItem>
+                  {['foot', 'bicycle', 'scooter', 'car'].map((type) => (
+                    <FormItem key={type} className="flex-1">
+                      <FormControl>
+                        <div className="transport-option">
+                          <label 
+                            htmlFor={`transport-${type}`} 
+                            className={`flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${field.value === type ? 'border-primary bg-primary/5 elevation-2' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                          >
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${field.value === type ? 'bg-primary/20 text-primary' : 'bg-gray-100 text-gray-500'}`}>
+                              {getTransportIcon(type)}
+                            </div>
+                            <RadioGroupItem value={type} id={`transport-${type}`} className="sr-only" />
+                            <span className="font-medium">
+                              {type === 'foot' && 'Пеший курьер'}
+                              {type === 'bicycle' && 'Велокурьер'}
+                              {type === 'scooter' && 'Самокат'}
+                              {type === 'car' && 'Автомобиль'}
+                            </span>
+                          </label>
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  ))}
                 </RadioGroup>
               </FormControl>
               <FormMessage />
@@ -186,60 +193,76 @@ const CourierForm = () => {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="experience"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>
-                  У меня есть опыт работы курьером
-                </FormLabel>
-                <FormDescription>
-                  Отметьте, если вы уже работали курьером
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4 bg-gray-50 p-4 rounded-lg animate-fade-in" style={{animationDelay: '600ms'}}>
+          <FormField
+            control={form.control}
+            name="experience"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className={field.value ? "data-[state=checked]:bg-primary" : ""}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    У меня есть опыт работы курьером
+                  </FormLabel>
+                  <FormDescription>
+                    Отметьте, если вы уже работали курьером
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="agreeTerms"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>
-                  Я согласен с условиями сотрудничества
-                </FormLabel>
-                <FormDescription>
-                  Я прочитал и согласен с условиями <a href="#" className="text-primary underline">пользовательского соглашения</a>
-                </FormDescription>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="agreeTerms"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className={field.value ? "data-[state=checked]:bg-primary" : ""}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    Я согласен с условиями сотрудничества
+                  </FormLabel>
+                  <FormDescription>
+                    Я прочитал и согласен с условиями <a href="#" className="text-primary underline hover:text-primary/80 transition-colors">пользовательского соглашения</a>
+                  </FormDescription>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-        <Button 
-          type="submit" 
-          className="w-full md:w-auto bg-accent text-accent-foreground hover:bg-accent/90"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Отправка..." : "Стать курьером"}
-        </Button>
+        <div className="flex justify-center animate-fade-in" style={{animationDelay: '700ms'}}>
+          <Button 
+            type="submit" 
+            className="material-button ripple w-full md:w-auto"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                Отправка...
+              </>
+            ) : (
+              <>
+                <UserPlus className="mr-2 h-4 w-4" /> 
+                Стать курьером
+              </>
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

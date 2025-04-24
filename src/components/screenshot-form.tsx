@@ -13,10 +13,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const MAX_FILE_SIZE = 5000000; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const formSchema = z.object({
@@ -26,19 +32,19 @@ const formSchema = z.object({
   phone: z.string().min(10, {
     message: "Введите корректный номер телефона",
   }),
-  orderCount: z.string().min(1, {
-    message: "Выберите количество заказов",
+  orderCount: z.string({
+    required_error: "Выберите количество заказов",
   }),
   screenshot: z
     .instanceof(FileList)
     .refine((files) => files.length > 0, "Скриншот обязателен")
     .refine(
-      (files) => files[0]?.size <= MAX_FILE_SIZE,
+      (files) => files?.[0]?.size <= MAX_FILE_SIZE,
       "Максимальный размер файла 5MB"
     )
     .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files[0]?.type),
-      "Только файлы форматов .jpg, .jpeg, .png и .webp"
+      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      "Допустимые форматы: .jpg, .jpeg, .png и .webp"
     ),
 });
 
@@ -57,11 +63,16 @@ const ScreenshotForm = () => {
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+  const handleFileChange = (files: FileList | null) => {
+    if (files && files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
     }
   };
 
@@ -72,8 +83,8 @@ const ScreenshotForm = () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     toast({
-      title: "Форма отправлена!",
-      description: "Ваша заявка на получение бонуса принята.",
+      title: "Скриншот отправлен!",
+      description: "Ваш бонус будет начислен после проверки.",
     });
     
     console.log(data);
@@ -92,7 +103,7 @@ const ScreenshotForm = () => {
             <FormItem>
               <FormLabel>Имя</FormLabel>
               <FormControl>
-                <Input placeholder="Иванов Иван" {...field} />
+                <Input placeholder="Иван Иванов" {...field} className="rounded-md" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -106,7 +117,7 @@ const ScreenshotForm = () => {
             <FormItem>
               <FormLabel>Телефон</FormLabel>
               <FormControl>
-                <Input placeholder="+7 (900) 123-45-67" {...field} />
+                <Input placeholder="+7 (900) 123-45-67" {...field} className="rounded-md" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -121,7 +132,7 @@ const ScreenshotForm = () => {
               <FormLabel>Количество выполненных заказов</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-md elevation-1">
                     <SelectValue placeholder="Выберите количество заказов" />
                   </SelectTrigger>
                 </FormControl>
@@ -131,9 +142,6 @@ const ScreenshotForm = () => {
                   <SelectItem value="100">100 заказов (бонус 3000₽)</SelectItem>
                 </SelectContent>
               </Select>
-              <FormDescription>
-                Выберите уровень для получения соответствующего бонуса
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -142,48 +150,72 @@ const ScreenshotForm = () => {
         <FormField
           control={form.control}
           name="screenshot"
-          render={({ field: { onChange, value, ...rest } }) => (
+          render={({ field: { value, onChange, ...fieldProps } }) => (
             <FormItem>
-              <FormLabel>Загрузите скриншот</FormLabel>
+              <FormLabel>Скриншот из приложения</FormLabel>
               <FormControl>
-                <div className="grid w-full gap-1.5">
-                  <Input
-                    id="screenshot"
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    onChange={(e) => {
-                      onChange(e.target.files);
-                      handleFileChange(e);
-                    }}
-                    {...rest}
-                  />
+                <div className="grid w-full gap-2">
+                  <div 
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer border-border hover:bg-gray-50 transition-colors"
+                    onClick={() => document.getElementById('screenshot-upload')?.click()}
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                      </svg>
+                      <p className="mb-1 text-sm text-gray-600">
+                        <span className="font-semibold">Нажмите для загрузки</span> или перетащите файл
+                      </p>
+                      <p className="text-xs text-gray-500">SVG, PNG, JPG (MAX. 5MB)</p>
+                    </div>
+                    <input 
+                      id="screenshot-upload" 
+                      type="file" 
+                      accept=".jpg,.jpeg,.png,.webp" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        handleFileChange(e.target.files);
+                        onChange(e.target.files);
+                      }} 
+                      {...fieldProps} 
+                    />
+                  </div>
                   
                   {previewUrl && (
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-500 mb-1">Предпросмотр:</p>
+                    <div className="relative mt-2 material-card p-2">
                       <img 
                         src={previewUrl} 
-                        alt="Предпросмотр" 
-                        className="max-h-40 rounded-md border" 
+                        alt="Предпросмотр скриншота" 
+                        className="rounded max-h-40 mx-auto"
                       />
+                      <button
+                        type="button"
+                        className="absolute top-2 right-2 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center"
+                        onClick={() => {
+                          setPreviewUrl(null);
+                          onChange(null);
+                        }}
+                      >
+                        ✕
+                      </button>
                     </div>
                   )}
                 </div>
               </FormControl>
               <FormDescription>
-                Сделайте скриншот экрана со статистикой заказов из приложения
+                Загрузите скриншот из приложения курьера, показывающий количество выполненных заказов
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <Button 
           type="submit" 
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          className="w-full md:w-auto material-button ripple"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Отправка..." : "Отправить заявку"}
+          {isSubmitting ? "Отправка..." : "Отправить скриншот"}
         </Button>
       </form>
     </Form>
