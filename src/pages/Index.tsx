@@ -1,4 +1,5 @@
 import CourierForm from "@/components/courier-form";
+import BonusSection from "@/components/bonus-section";
 
 const Index = () => {
   return (
@@ -15,6 +16,7 @@ const Index = () => {
           </div>
           <div className="hidden md:flex space-x-4">
             <a href="#about" className="text-accent hover:underline">О работе</a>
+            <a href="#bonuses" className="text-accent hover:underline">Бонусы</a>
             <a href="#application" className="text-accent hover:underline">Подать заявку</a>
             <a href="#faq" className="text-accent hover:underline">Вопросы</a>
           </div>
@@ -83,6 +85,11 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Бонусная программа */}
+        <section id="bonuses">
+          <BonusSection />
+        </section>
+
         {/* Форма заявки */}
         <section id="application" className="py-16 px-6">
           <div className="container mx-auto max-w-4xl">
@@ -107,6 +114,11 @@ const Index = () => {
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-xl font-semibold mb-2">Как происходит оплата?</h3>
                 <p className="text-gray-600">Оплата происходит еженедельно на вашу банковскую карту. Размер заработка зависит от количества выполненных заказов.</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-semibold mb-2">Как получить бонус за выполненные заказы?</h3>
+                <p className="text-gray-600">Выполните необходимое количество заказов (30, 60 или 100) за неделю, сделайте скриншот из приложения и загрузите его через форму на нашем сайте.</p>
               </div>
               
               <div className="bg-white p-6 rounded-lg shadow-md">
