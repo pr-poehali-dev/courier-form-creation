@@ -1,107 +1,96 @@
-import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import CitySelect from "./city-select";
-import { Bike, Car, CheckCircle, HelpCircle, Loader2, User, UserPlus } from "lucide-react";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Bike, Car, Check, User } from 'lucide-react';
+import CitySelect from './city-select';
 
-const formSchema = z.object({
-  fullName: z.string().min(5, {
-    message: "ФИО должно содержать не менее 5 символов",
-  }),
-  phone: z.string().min(10, {
-    message: "Введите корректный номер телефона",
-  }),
-  email: z.string().email({
-    message: "Введите корректный email",
-  }),
-  city: z.string().min(1, {
-    message: "Пожалуйста, выберите город",
-  }),
-  transportType: z.enum(["foot", "bicycle", "car", "scooter"], {
-    required_error: "Выберите тип транспорта",
-  }),
-  experience: z.boolean().default(false).optional(),
-  agreeTerms: z.literal(true, {
-    errorMap: () => ({ message: "Необходимо согласиться с условиями" }),
-  }),
+// Схема валидации
+const FormSchema = z.object({
+  fullName: z.string().min(5, { message: 'Введите полное имя' }),
+  phone: z.string().min(10, { message: 'Введите корректный номер телефона' }),
+  email: z.string().email({ message: 'Введите корректный email' }),
+  city: z.string().min(1, { message: 'Выберите город' }),
+  transportType: z.enum(['foot', 'bike', 'car'], { required_error: 'Выберите тип транспорта' }),
+  experience: z.string().optional(),
+  additionalInfo: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof FormSchema>;
 
 const CourierForm = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(FormSchema),
     defaultValues: {
-      fullName: "",
-      phone: "",
-      email: "",
-      city: "",
-      transportType: "foot",
-      experience: false,
-      agreeTerms: false,
+      fullName: '',
+      phone: '',
+      email: '',
+      city: '',
+      transportType: 'foot',
+      experience: '',
+      additionalInfo: '',
     },
   });
-
-  const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
-    
-    // Имитация отправки данных на сервер
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Заявка отправлена!",
-      description: "Мы свяжемся с вами в ближайшее время.",
-    });
-    
-    console.log(data);
-    form.reset();
-    setIsSubmitting(false);
+  
+  const onSubmit = (data: FormValues) => {
+    console.log('Form data:', data);
+    // Здесь будет отправка данных на сервер
+    setTimeout(() => {
+      setIsSubmitted(true);
+    }, 1000);
   };
-
+  
+  // Функция для получения иконки транспорта
   const getTransportIcon = (type: string) => {
     switch (type) {
       case 'foot':
-        return <User className="h-5 w-5" />;
-      case 'bicycle':
-        return <Bike className="h-5 w-5" />;
+        return <User className="h-6 w-6" />;
+      case 'bike':
+        return <Bike className="h-6 w-6" />;
       case 'car':
-        return <Car className="h-5 w-5" />;
-      case 'scooter':
-        return <Bike className="h-5 w-5" rotate={20} />;
+        return <Car className="h-6 w-6" />;
       default:
         return null;
     }
   };
-
+  
+  if (isSubmitted) {
+    return (
+      <div className="text-center py-12 px-6 bg-gray-50 rounded-lg max-w-md mx-auto animate-fade-in">
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Check className="h-8 w-8 text-primary" />
+        </div>
+        <h3 className="text-2xl font-bold mb-4">Заявка отправлена!</h3>
+        <p className="text-gray-600 mb-6">
+          Спасибо за интерес к работе курьером в Яндекс Еде! Мы свяжемся с вами в ближайшее время для уточнения деталей.
+        </p>
+        <Button variant="outline" onClick={() => setIsSubmitted(false)}>
+          Отправить еще заявку
+        </Button>
+      </div>
+    );
+  }
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 animate-fade-in">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="fullName"
             render={({ field }) => (
-              <FormItem className="animate-fade-in" style={{animationDelay: '100ms'}}>
-                <FormLabel>ФИО</FormLabel>
+              <FormItem>
+                <FormLabel>ФИО <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="Иванов Иван Иванович" {...field} className="rounded-md elevation-1" />
+                  <Input placeholder="Иванов Иван Иванович" {...field} className="bg-gray-50" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -112,26 +101,24 @@ const CourierForm = () => {
             control={form.control}
             name="phone"
             render={({ field }) => (
-              <FormItem className="animate-fade-in" style={{animationDelay: '200ms'}}>
-                <FormLabel>Телефон</FormLabel>
+              <FormItem>
+                <FormLabel>Телефон <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="+7 (900) 123-45-67" {...field} className="rounded-md elevation-1" />
+                  <Input placeholder="+7 (___) ___-__-__" {...field} className="bg-gray-50" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="animate-fade-in" style={{animationDelay: '300ms'}}>
-                <FormLabel>Email</FormLabel>
+              <FormItem>
+                <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="example@mail.ru" {...field} className="rounded-md elevation-1" />
+                  <Input placeholder="example@mail.ru" {...field} className="bg-gray-50" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -142,125 +129,125 @@ const CourierForm = () => {
             control={form.control}
             name="city"
             render={({ field }) => (
-              <FormItem className="animate-fade-in" style={{animationDelay: '400ms'}}>
-                <FormLabel>Город</FormLabel>
-                <CitySelect value={field.value} onChange={field.onChange} />
+              <FormItem>
+                <FormLabel>Город <span className="text-red-500">*</span></FormLabel>
+                <FormControl>
+                  <CitySelect onValueChange={field.onChange} value={field.value} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-
+        
         <FormField
           control={form.control}
           name="transportType"
           render={({ field }) => (
-            <FormItem className="space-y-3 animate-fade-in" style={{animationDelay: '500ms'}}>
-              <FormLabel>Тип транспорта</FormLabel>
+            <FormItem className="space-y-3">
+              <FormLabel>Выберите тип транспорта <span className="text-red-500">*</span></FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-3"
+                  className="grid grid-cols-3 gap-4"
                 >
-                  {['foot', 'bicycle', 'scooter', 'car'].map((type) => (
-                    <FormItem key={type} className="flex-1">
-                      <FormControl>
-                        <div className="transport-option">
-                          <label 
-                            htmlFor={`transport-${type}`} 
-                            className={`flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-300 border-2 ${field.value === type ? 'border-primary bg-primary/5 elevation-2' : 'border-gray-200 bg-white hover:border-gray-300'}`}
-                          >
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${field.value === type ? 'bg-primary/20 text-primary' : 'bg-gray-100 text-gray-500'}`}>
-                              {getTransportIcon(type)}
-                            </div>
-                            <RadioGroupItem value={type} id={`transport-${type}`} className="sr-only" />
-                            <span className="font-medium">
-                              {type === 'foot' && 'Пеший курьер'}
-                              {type === 'bicycle' && 'Велокурьер'}
-                              {type === 'scooter' && 'Самокат'}
-                              {type === 'car' && 'Автомобиль'}
-                            </span>
-                          </label>
-                        </div>
-                      </FormControl>
-                    </FormItem>
-                  ))}
+                  <div>
+                    <RadioGroupItem
+                      value="foot"
+                      id="foot"
+                      className="peer sr-only"
+                    />
+                    <label
+                      htmlFor="foot"
+                      className="flex flex-col items-center justify-between rounded-lg border-2 border-gray-200 bg-gray-50 p-4 hover:border-primary hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all"
+                    >
+                      <User className="h-6 w-6 mb-2" />
+                      <div className="text-sm font-medium">Пешком</div>
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <RadioGroupItem
+                      value="bike"
+                      id="bike"
+                      className="peer sr-only"
+                    />
+                    <label
+                      htmlFor="bike"
+                      className="flex flex-col items-center justify-between rounded-lg border-2 border-gray-200 bg-gray-50 p-4 hover:border-primary hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all"
+                    >
+                      <Bike className="h-6 w-6 mb-2" />
+                      <div className="text-sm font-medium">Велосипед</div>
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <RadioGroupItem
+                      value="car"
+                      id="car"
+                      className="peer sr-only"
+                    />
+                    <label
+                      htmlFor="car"
+                      className="flex flex-col items-center justify-between rounded-lg border-2 border-gray-200 bg-gray-50 p-4 hover:border-primary hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all"
+                    >
+                      <Car className="h-6 w-6 mb-2" />
+                      <div className="text-sm font-medium">Автомобиль</div>
+                    </label>
+                  </div>
                 </RadioGroup>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="space-y-4 bg-gray-50 p-4 rounded-lg animate-fade-in" style={{animationDelay: '600ms'}}>
-          <FormField
-            control={form.control}
-            name="experience"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+        
+        <FormField
+          control={form.control}
+          name="experience"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Опыт работы курьером</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    className={field.value ? "data-[state=checked]:bg-primary" : ""}
-                  />
+                  <SelectTrigger className="bg-gray-50">
+                    <SelectValue placeholder="Выберите ваш опыт" />
+                  </SelectTrigger>
                 </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    У меня есть опыт работы курьером
-                  </FormLabel>
-                  <FormDescription>
-                    Отметьте, если вы уже работали курьером
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="agreeTerms"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    className={field.value ? "data-[state=checked]:bg-primary" : ""}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    Я согласен с условиями сотрудничества
-                  </FormLabel>
-                  <FormDescription>
-                    Я прочитал и согласен с условиями <a href="#" className="text-primary underline hover:text-primary/80 transition-colors">пользовательского соглашения</a>
-                  </FormDescription>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex justify-center animate-fade-in" style={{animationDelay: '700ms'}}>
-          <Button 
-            type="submit" 
-            className="material-button ripple w-full md:w-auto"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                Отправка...
-              </>
-            ) : (
-              <>
-                <UserPlus className="mr-2 h-4 w-4" /> 
-                Стать курьером
-              </>
-            )}
+                <SelectContent>
+                  <SelectItem value="no">Нет опыта</SelectItem>
+                  <SelectItem value="less-than-year">Менее 1 года</SelectItem>
+                  <SelectItem value="1-3">1-3 года</SelectItem>
+                  <SelectItem value="more-than-3">Более 3 лет</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="additionalInfo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Дополнительная информация</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Укажите дополнительную информацию, которая может быть полезна"
+                  className="resize-none bg-gray-50"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="pt-4 flex justify-center">
+          <Button type="submit" className="material-button ripple w-full md:w-auto px-8">
+            Отправить заявку
           </Button>
         </div>
       </form>
